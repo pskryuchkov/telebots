@@ -1,9 +1,9 @@
 import urllib2
 import cv2
-import json
 import glob, os
-from config import *
-from pprint import pprint
+from copa import *
+
+api_link = "https://www.instagram.com/{0}/?__a=1"
 
 
 def links_chunk(max_id=None):
@@ -30,7 +30,7 @@ def photos_links(min_photos=20):
 
     while len(links.values()) < min_photos:
         try:
-            print "Chunk #{}".format(n_chunk)
+            #print "Chunk #{}".format(n_chunk)
             chunk, last_id = links_chunk(last_id)
             links.update(chunk)
             n_chunk += 1
@@ -44,9 +44,9 @@ def photos_links(min_photos=20):
 def load_photos(links):
     print "Loading photos..."
     for j, key in enumerate(links.keys()):
-        print j
+        print "{}/{}".format(j+1, len(links.keys()))
         try:
-            f = open('{0}/{1}.jpg'.format(pretty_girl, key), 'wb')
+            f = open('{0}/{1}.jpg'.format(config.pretty_girl, key), 'wb')
             data = urllib2.urlopen(links[key]).read()
             f.write(data)
             f.close()
@@ -77,13 +77,12 @@ def n_faces(photo_path):
 
 def detect_portrait(photos_list, n_persons=1):
     portrait_id = []
-    print("Detecting photos with face...")
 
-    for j, pic in enumerate(["{}/{}.jpg".format(pretty_girl, x) for x in photos_list]):
+    for j, pic in enumerate(["{}/{}.jpg".format(config.pretty_girl, x) for x in photos_list]):
         n, photo_type = n_faces(pic)
         if n == n_persons:
             photo_id = os.path.basename(pic).split(".")[0]
-            print("idx={0}, id={1}, type='{2}'".format(j, photo_id, photo_type))
+            print("k={0}, id={1}, type='{2}'".format(j, photo_id, photo_type))
             portrait_id.append(photo_id),
     return portrait_id
 
@@ -95,47 +94,59 @@ def save_list(fn, l):
 
 
 def build_base():
-    links = photos_links(min_posts)
+    links = photos_links(config.min_posts)
 
-    if not os.path.exists(pretty_girl):
-        os.makedirs(pretty_girl)
+    if not os.path.exists(config.pretty_girl):
+        os.makedirs(config.pretty_girl)
 
     load_photos(links)
 
+    print("Face detecting...")
     portraits = detect_portrait(links.keys())
-    save_list("{}/portraits.txt".format(pretty_girl), portraits)
+    save_list("{}/portraits.txt".format(config.pretty_girl), portraits)
+    print "Done!"
 
 
 def update_base():
-    links = photos_links(min_posts)
+    links = photos_links(config.min_posts)
     new_ids = set(links.keys())
-    old_ids = set([os.path.basename(x).split(".")[0] for x in glob.glob(pretty_girl + "/*.jpg")])
+    old_ids = set([os.path.basename(x).split(".")[0] for x in glob.glob(config.pretty_girl + "/*.jpg")])
 
     if not new_ids - old_ids:
         print "No new photos"
         return
 
-    load_photos(new_ids - old_ids)
+    new_links = {}
+    for x in new_ids - old_ids:
+        new_links[x] = links[x]
+
+    load_photos(new_links)
+
+    print "New photos:"
+    for x in new_ids - old_ids:
+        print "  id={}".format(x)
+
+    if old_ids - new_ids:
+        print "Excluded photos:"
 
     for x in list(old_ids - new_ids):
-        print "{} removed".format(x)
-        os.remove("{}/{}.jpg".format(pretty_girl, x))
+        print "  id={}".format(x)
+        os.remove("{}/{}.jpg".format(config.pretty_girl, x))
 
-    print "New photos ids:"
-    pprint(new_ids - old_ids)
-
+    print("Face detecting...")
     portraits = detect_portrait(new_ids - old_ids)
-    save_list("{}/portraits.txt".format(pretty_girl), portraits)
+    save_list("{}/portraits.txt".format(config.pretty_girl), portraits)
+    print "Done!"
 
 if __name__ == '__main__':
-    if not os.path.exists(pretty_girl):
-        print "Building photo base..."
+    config = get_params("config.json")
+    her_insta = api_link.format(config.pretty_girl)
+
+    if not os.path.exists(config.pretty_girl):
         build_base()
-        print "Done!"
     else:
-        print "Updating photo base..."
         update_base()
-        print "Done!"
+
 
 
 
