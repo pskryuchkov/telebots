@@ -1,15 +1,17 @@
 # drama
 
-telegram bot for people who fall in love
+telegram bot for guys who fall in love
+
+<img src="screen.png" width="250">
+
+### telegram commands
+
+/cry - send instagram photo of your favourite girl with sad song (from `music` folder)
+
+/advice - send helpful advice (in russian)
 
 ### scripts
 
-loader.py - loads instagram photo (see config.json)
+loader.py - load and select valid instagram photos (with a single face; see config.json)
 
-bot.py - runs telegram bot
-
-### commands
-
-/cry - sends instagram photo of your favourite girl with sad song (from /music)
-
-/advice - sends helpful advice (in russian)
+bot.py - run telegram bot
