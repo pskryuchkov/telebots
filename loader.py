@@ -30,7 +30,7 @@ def photos_links(min_photos=20):
 
     while len(links.values()) < min_photos:
         try:
-            #print "Chunk #{}".format(n_chunk)
+            print "Chunk #{}".format(n_chunk)
             chunk, last_id = links_chunk(last_id)
             links.update(chunk)
             n_chunk += 1
@@ -135,7 +135,7 @@ def update_base():
 
     print("Face detecting...")
     portraits = detect_portrait(new_ids - old_ids)
-    save_list("{}/portraits.txt".format(config.pretty_girl), portraits)
+    save_list("{}/portraits.txt".format(config.pretty_girl), portraits) # FIXME: save old info
     print "Done!"
 
 if __name__ == '__main__':
