@@ -1,23 +1,25 @@
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import cv2
 import glob, os
 from copa import *
+import ssl
 
-api_link = "https://www.instagram.com/{0}/?__a=1"
+api_link = "https://www.instagram.com/{}/media/"
+context = ssl._create_unverified_context()
 
 
 def links_chunk(max_id=None):
     if max_id is None:
-        req = urllib2.Request(her_insta)
+        req = urllib.request.Request(her_insta)
     else:
-        req = urllib2.Request(her_insta + "&max_id={}".format(max_id))
+        req = urllib.request.Request(her_insta+"?max_id={}".format(max_id))
 
-    response = urllib2.urlopen(req)
+    response = urllib.request.urlopen(req, context=context)
     the_page = response.read()
-
     links = {}
-    for field in json.loads(the_page)["user"]["media"]["nodes"]:
-        links[field["code"]] = field["display_src"]
+
+    for field in json.loads(the_page)["items"]:
+        links[field["code"]] = field["images"]["standard_resolution"]["url"]
         last_id = field["id"]
 
     return links, last_id
@@ -28,30 +30,30 @@ def photos_links(min_photos=20):
     last_id = None
     n_chunk = 1
 
-    while len(links.values()) < min_photos:
-        try:
-            print "Chunk #{}".format(n_chunk)
-            chunk, last_id = links_chunk(last_id)
-            links.update(chunk)
-            n_chunk += 1
-        except:
-            print "Warning: number of links less than min_photos"
-            break
+    while len(list(links.values())) < min_photos:
+        #try:
+        print("Chunk #{}".format(n_chunk))
+        chunk, last_id = links_chunk(last_id)
+        links.update(chunk)
+        n_chunk += 1
+        #except:
+        #    print("Warning: number of links less than min_photos")
+        #    break
 
     return links
 
 
 def load_photos(links):
-    print "Loading photos..."
+    print("Loading photos...")
     for j, key in enumerate(links.keys()):
-        print "{}/{}".format(j+1, len(links.keys()))
+        print("{}/{}".format(j+1, len(links.keys())))
         try:
             f = open('{0}/{1}.jpg'.format(config.pretty_girl, key), 'wb')
-            data = urllib2.urlopen(links[key]).read()
+            data = urllib.request.urlopen(links[key], context=context).read()
             f.write(data)
             f.close()
         except:
-            print "Warning: photo '{0}' didn't loaded".format(key)
+            print("Warning: photo '{0}' didn't loaded".format(key))
             continue
 
 
@@ -79,11 +81,14 @@ def detect_portrait(photos_list, n_persons=1):
     portrait_id = []
 
     for j, pic in enumerate(["{}/{}.jpg".format(config.pretty_girl, x) for x in photos_list]):
-        n, photo_type = n_faces(pic)
-        if n == n_persons:
-            photo_id = os.path.basename(pic).split(".")[0]
-            print("k={0}, id={1}, type='{2}'".format(j, photo_id, photo_type))
-            portrait_id.append(photo_id),
+        try:
+            n, photo_type = n_faces(pic)
+            if n == n_persons:
+                photo_id = os.path.basename(pic).split(".")[0]
+                print("k={0}, id={1}, type='{2}'".format(j, photo_id, photo_type))
+                portrait_id.append(photo_id)
+        except:
+            pass
     return portrait_id
 
 
@@ -102,9 +107,9 @@ def build_base():
     load_photos(links)
 
     print("Face detecting...")
-    portraits = detect_portrait(links.keys())
+    portraits = detect_portrait(list(links.keys()))
     save_list("{}/portraits.txt".format(config.pretty_girl), portraits)
-    print "Done!"
+    print("Done!")
 
 
 def update_base():
@@ -113,7 +118,7 @@ def update_base():
     old_ids = set([os.path.basename(x).split(".")[0] for x in glob.glob(config.pretty_girl + "/*.jpg")])
 
     if not new_ids - old_ids:
-        print "No new photos"
+        print("No new photos")
         return
 
     new_links = {}
@@ -122,21 +127,21 @@ def update_base():
 
     load_photos(new_links)
 
-    print "New photos:"
+    print("New photos:")
     for x in new_ids - old_ids:
-        print "  id={}".format(x)
+        print("  id={}".format(x))
 
     if old_ids - new_ids:
-        print "Excluded photos:"
+        print("Excluded photos:")
 
     for x in list(old_ids - new_ids):
-        print "  id={}".format(x)
+        print("  id={}".format(x))
         os.remove("{}/{}.jpg".format(config.pretty_girl, x))
 
     print("Face detecting...")
     portraits = detect_portrait(new_ids - old_ids)
     save_list("{}/portraits.txt".format(config.pretty_girl), portraits) # FIXME: save old info
-    print "Done!"
+    print("Done!")
 
 if __name__ == '__main__':
     config = get_params("config.json")
