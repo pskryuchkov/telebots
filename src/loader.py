@@ -48,7 +48,7 @@ def load_photos(links):
     for j, key in enumerate(links.keys()):
         print("{}/{}".format(j+1, len(links.keys())))
         try:
-            f = open('{0}/{1}.jpg'.format(config.pretty_girl, key), 'wb')
+            f = open('../{0}/{1}.jpg'.format(config.pretty_girl, key), 'wb')
             data = urllib.request.urlopen(links[key], context=context).read()
             f.write(data)
             f.close()
@@ -108,7 +108,7 @@ def build_base():
 
     print("Face detecting...")
     portraits = detect_portrait(list(links.keys()))
-    save_list("{}/portraits.txt".format(config.pretty_girl), portraits)
+    save_list("../{}/portraits.txt".format(config.pretty_girl), portraits)
     print("Done!")
 
 
@@ -136,15 +136,15 @@ def update_base():
 
     for x in list(old_ids - new_ids):
         print("  id={}".format(x))
-        os.remove("{}/{}.jpg".format(config.pretty_girl, x))
+        os.remove("../{}/{}.jpg".format(config.pretty_girl, x))
 
     print("Face detecting...")
     portraits = detect_portrait(new_ids - old_ids)
-    save_list("{}/portraits.txt".format(config.pretty_girl), portraits) # FIXME: save old info
+    save_list("../{}/portraits.txt".format(config.pretty_girl), portraits) # FIXME: save old info
     print("Done!")
 
 if __name__ == '__main__':
-    config = get_params("config.json")
+    config = get_params("../config.json")
     her_insta = api_link.format(config.pretty_girl)
 
     if not os.path.exists(config.pretty_girl):

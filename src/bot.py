@@ -17,17 +17,18 @@ problem_solution = ["Выеби ее",
 
 be_a_man = ", будь мужиком, блеать!"
 
-config = get_params("config.json")
+config = get_params("../config.json")
 bot = telebot.TeleBot(config.bot_token)
 
 
 @bot.message_handler(func=lambda message: True, content_types=['text'])
 def echo_msg(message):
     if message.text == "/cry":
-        portraits = list(map(lambda x: x.strip(), open(config.pretty_girl + "/portraits.txt", "r").readlines()))
-        songs = glob.glob("music/*.mp3")
+        portraits = list(map(lambda x: x.strip(), open("../" + config.pretty_girl +
+                                                        "/portraits.txt", "r").readlines()))
+        songs = glob.glob("../music/*.mp3")
 
-        cry_photo = open('{}/{}.jpg'.format(config.pretty_girl, random.choice(portraits)), 'rb')
+        cry_photo = open('../{}/{}.jpg'.format(config.pretty_girl, random.choice(portraits)), 'rb')
         cry_song = open(random.choice(songs), 'rb')
 
         bot.send_photo(message.chat.id, cry_photo)
