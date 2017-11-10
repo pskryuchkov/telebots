@@ -6,12 +6,12 @@ telegram bot for guys who fall in love
 
 ### telegram commands
 
-/cry - send instagram photo of your favourite girl with sad song (from `music` folder)
+`/cry` - send instagram photo of your favourite girl with sad song (from `music` folder)
 
-/advice - send helpful advice (in russian)
+`/advice` - send helpful advice (in russian)
 
 ### scripts
 
-loader.py - load and select valid instagram photos (with a single face; see config.json)
+`loader.py` - load and select valid instagram photos (with a single face; see `config.json`)
 
-bot.py - run telegram bot
+`bot.py` - run telegram bot
