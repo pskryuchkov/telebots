@@ -1,2 +1,0 @@
-opencv_python==3.3.0.9
-pyTelegramBotAPI==3.2.0
